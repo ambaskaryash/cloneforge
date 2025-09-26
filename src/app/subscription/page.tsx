@@ -212,7 +212,7 @@ export default function SubscriptionPage() {
                 Current Subscription
               </h3>
               <p className="text-gray-600 mb-4">
-                You're on the {SUBSCRIPTION_PLANS[subscription.plan as keyof typeof SUBSCRIPTION_PLANS]?.name} plan
+                You&apos;re on the {SUBSCRIPTION_PLANS[subscription.plan as keyof typeof SUBSCRIPTION_PLANS]?.name} plan
               </p>
               {subscription.currentPeriodEnd && (
                 <p className="text-sm text-gray-500 mb-4">

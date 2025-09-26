@@ -102,12 +102,12 @@ export async function POST(request: NextRequest) {
       txnid: txnid
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     const duration = Date.now() - startTime;
     logger.error('PayU payment creation failed', error, { duration: `${duration}ms` });
     
     return NextResponse.json(
-      { error: error?.message || 'Internal server error' },
+      { error: error instanceof Error ? error.message : 'Internal server error' },
       { status: 500 }
     );
   }

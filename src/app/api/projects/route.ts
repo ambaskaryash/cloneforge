@@ -17,7 +17,7 @@ export async function GET() {
     }
 
     // Get or create user record
-    let user = await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { clerkId: userId }
     });
 

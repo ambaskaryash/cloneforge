@@ -77,7 +77,7 @@ export default function DashboardPage() {
   const getStatusIcon = (status: Project['status']) => {
     switch (status) {
       case 'COMPLETED':
-        return <CheckCircleIcon className=\"h-5 w-5 text-green-500\" />;
+        return <CheckCircleIcon className="h-5 w-5 text-green-500" />;
       case 'FAILED':
         return <ExclamationTriangleIcon className=\"h-5 w-5 text-red-500\" />;
       case 'ANALYZING':

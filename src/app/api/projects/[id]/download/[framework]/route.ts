@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { PrismaClient } from '@prisma/client';
-// import JSZip from 'jszip';
+import JSZip from 'jszip';
 
 const prisma = new PrismaClient();
 
@@ -43,7 +43,7 @@ export async function GET(
       include: {
         generatedVersions: {
           where: {
-            framework: framework.toUpperCase() as any
+            framework: framework.toUpperCase() as 'NEXTJS' | 'REACT' | 'HTML_CSS_JS' | 'VUE'
           }
         }
       }
@@ -62,10 +62,10 @@ export async function GET(
 
     // Create ZIP file
     const zip = new JSZip();
-    const files = generatedVersion.files as any[];
+    const files = generatedVersion.files as { path: string; content: string; type: string }[];
 
     // Add files to ZIP
-    files.forEach((file: any) => {
+    files.forEach((file: { path: string; content: string; type: string }) => {
       if (file.type === 'file') {
         zip.file(file.path, file.content);
       }

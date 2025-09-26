@@ -1,1 +1,142 @@
-interface DeploymentProvider {\n  id: string;\n  name: string;\n  description: string;\n  supportedFrameworks: string[];\n  requiresAuth: boolean;\n  setupUrl: string;\n}\n\ninterface DeploymentConfig {\n  provider: string;\n  projectName: string;\n  framework: string;\n  buildCommand?: string;\n  outputDirectory?: string;\n  environmentVariables?: Record<string, string>;\n}\n\ninterface DeploymentResult {\n  success: boolean;\n  url?: string;\n  deploymentId?: string;\n  error?: string;\n  logs?: string[];\n}\n\nexport class DeploymentService {\n  private providers: DeploymentProvider[] = [\n    {\n      id: 'vercel',\n      name: 'Vercel',\n      description: 'Deploy instantly to Vercel with zero configuration',\n      supportedFrameworks: ['NEXTJS', 'REACT', 'HTML_CSS_JS', 'VUE'],\n      requiresAuth: true,\n      setupUrl: 'https://vercel.com',\n    },\n    {\n      id: 'netlify',\n      name: 'Netlify',\n      description: 'Deploy static sites and serverless functions',\n      supportedFrameworks: ['HTML_CSS_JS', 'REACT', 'VUE', 'NEXTJS'],\n      requiresAuth: true,\n      setupUrl: 'https://netlify.com',\n    },\n    {\n      id: 'github-pages',\n      name: 'GitHub Pages',\n      description: 'Free static site hosting from GitHub',\n      supportedFrameworks: ['HTML_CSS_JS', 'REACT', 'VUE'],\n      requiresAuth: true,\n      setupUrl: 'https://pages.github.com',\n    },\n    {\n      id: 'firebase',\n      name: 'Firebase Hosting',\n      description: 'Fast and secure web hosting by Google',\n      supportedFrameworks: ['HTML_CSS_JS', 'REACT', 'VUE', 'NEXTJS'],\n      requiresAuth: true,\n      setupUrl: 'https://firebase.google.com/docs/hosting',\n    },\n    {\n      id: 'surge',\n      name: 'Surge.sh',\n      description: 'Simple, single-command web publishing',\n      supportedFrameworks: ['HTML_CSS_JS', 'REACT', 'VUE'],\n      requiresAuth: false,\n      setupUrl: 'https://surge.sh',\n    },\n  ];\n\n  getAvailableProviders(framework?: string): DeploymentProvider[] {\n    if (!framework) {\n      return this.providers;\n    }\n    return this.providers.filter(provider => \n      provider.supportedFrameworks.includes(framework)\n    );\n  }\n\n  async deploy(config: DeploymentConfig, files: any[]): Promise<DeploymentResult> {\n    // In a real implementation, this would integrate with actual deployment APIs\n    // For now, we'll return mock deployment instructions\n    \n    const provider = this.providers.find(p => p.id === config.provider);\n    if (!provider) {\n      return {\n        success: false,\n        error: 'Invalid deployment provider'\n      };\n    }\n\n    // Simulate deployment process\n    await new Promise(resolve => setTimeout(resolve, 2000));\n\n    return {\n      success: true,\n      url: `https://${config.projectName.toLowerCase().replace(/[^a-z0-9]/g, '-')}.${config.provider === 'vercel' ? 'vercel.app' : config.provider === 'netlify' ? 'netlify.app' : 'example.com'}`,\n      deploymentId: `${config.provider}-${Date.now()}`,\n      logs: [\n        'Starting deployment...',\n        'Building project...',\n        'Uploading files...',\n        'Configuring routing...',\n        'Deployment successful!'\n      ]\n    };\n  }\n\n  generateDeploymentInstructions(provider: string, framework: string, files: any[]): string {\n    const instructions: Record<string, Record<string, string>> = {\n      'vercel': {\n        'NEXTJS': `\n# Deploy to Vercel\n\n1. Install Vercel CLI: npm i -g vercel\n2. Extract your project files\n3. Run: cd your-project && vercel\n4. Follow the prompts to deploy\n\nYour Next.js app will be automatically detected and deployed!`,\n        'REACT': `\n# Deploy to Vercel\n\n1. Install Vercel CLI: npm i -g vercel\n2. Extract your project files\n3. Add build script to package.json: \"build\": \"react-scripts build\"\n4. Run: cd your-project && vercel\n5. Set output directory to \"build\" when prompted\n\nYour React app will be deployed to a vercel.app URL!`,\n        'HTML_CSS_JS': `\n# Deploy to Vercel\n\n1. Install Vercel CLI: npm i -g vercel\n2. Extract your project files\n3. Run: cd your-project && vercel\n4. Your static site will be deployed instantly!\n\nNo build process needed for static HTML sites.`\n      },\n      'netlify': {\n        'HTML_CSS_JS': `\n# Deploy to Netlify\n\n1. Extract your project files\n2. Visit netlify.com and drag & drop your project folder\n3. Or use Netlify CLI: npm i -g netlify-cli\n4. Run: cd your-project && netlify deploy\n\nYour site will be live on a netlify.app URL!`,\n        'REACT': `\n# Deploy to Netlify\n\n1. Extract and build your project: npm run build\n2. Visit netlify.com and drag & drop the \"build\" folder\n3. Or use CLI: netlify deploy --prod --dir=build\n\nMake sure to set the publish directory to \"build\"!`\n      },\n      'github-pages': {\n        'HTML_CSS_JS': `\n# Deploy to GitHub Pages\n\n1. Create a new GitHub repository\n2. Upload your project files to the repo\n3. Go to Settings > Pages\n4. Select \"Deploy from a branch\" and choose \"main\"\n5. Your site will be available at username.github.io/repo-name\n\nFree hosting for static sites!`\n      }\n    };\n\n    return instructions[provider]?.[framework] || `\n# Deploy to ${provider}\n\n1. Extract your project files\n2. Follow the setup instructions at the provider's website\n3. Upload or connect your code repository\n4. Configure build settings if needed\n5. Deploy and enjoy your live website!\n\nVisit the provider's documentation for detailed instructions.`;\n  }\n\n  async createDeploymentPackage(files: any[], framework: string): Promise<{\n    files: any[];\n    instructions: string;\n    metadata: any;\n  }> {\n    // Add deployment-specific files based on framework\n    const deploymentFiles = [...files];\n    \n    if (framework === 'NEXTJS') {\n      // Add vercel.json for Vercel deployment optimization\n      deploymentFiles.push({\n        path: 'vercel.json',\n        content: JSON.stringify({\n          \"version\": 2,\n          \"buildCommand\": \"npm run build\",\n          \"outputDirectory\": \".next\"\n        }, null, 2),\n        type: 'file'\n      });\n    }\n    \n    if (framework === 'REACT' || framework === 'HTML_CSS_JS') {\n      // Add netlify.toml for Netlify deployment\n      deploymentFiles.push({\n        path: 'netlify.toml',\n        content: `\n[build]\n  publish = \"${framework === 'REACT' ? 'build' : '.'}\"${framework === 'REACT' ? '\\n  command = \"npm run build\"' : ''}\n\n[[redirects]]\n  from = \"/*\"\n  to = \"/index.html\"\n  status = 200`,\n        type: 'file'\n      });\n    }\n\n    // Add a deployment guide\n    const instructions = `\n# Deployment Guide\n\nThis package contains your generated ${framework} project and deployment configurations.\n\n## Quick Deploy Options:\n\n### 1. Vercel (Recommended for React/Next.js)\n- Visit vercel.com\n- Import your project or drag & drop\n- Automatic deployment\n\n### 2. Netlify (Great for static sites)\n- Visit netlify.com  \n- Drag & drop your project folder\n- Instant deployment\n\n### 3. GitHub Pages (Free option)\n- Create GitHub repo\n- Upload files\n- Enable Pages in settings\n\n## Manual Setup\n1. Extract all files\n2. Install dependencies: npm install\n3. Build project: npm run build\n4. Deploy build folder to your hosting provider\n\nFor detailed instructions, see the provider-specific guides included.\n    `;\n\n    return {\n      files: deploymentFiles,\n      instructions,\n      metadata: {\n        framework,\n        supportedProviders: this.getAvailableProviders(framework).map(p => p.name),\n        generatedAt: new Date().toISOString()\n      }\n    };\n  }\n}\n\nexport const deploymentService = new DeploymentService();
+interface DeploymentProvider {
+  id: string;
+  name: string;
+  description: string;
+  supportedFrameworks: string[];
+  requiresAuth: boolean;
+  setupUrl: string;
+}
+
+interface DeploymentConfig {
+  provider: string;
+  projectName: string;
+  framework: string;
+  buildCommand?: string;
+  outputDirectory?: string;
+  environmentVariables?: Record<string, string>;
+}
+
+interface DeploymentResult {
+  success: boolean;
+  url?: string;
+  deploymentId?: string;
+  error?: string;
+  logs?: string[];
+}
+
+export class DeploymentService {
+  private providers: DeploymentProvider[] = [
+    {
+      id: 'vercel',
+      name: 'Vercel',
+      description: 'Deploy instantly to Vercel with zero configuration',
+      supportedFrameworks: ['NEXTJS', 'REACT', 'HTML_CSS_JS', 'VUE'],
+      requiresAuth: true,
+      setupUrl: 'https://vercel.com',
+    },
+    {
+      id: 'netlify',
+      name: 'Netlify',
+      description: 'Deploy static sites and serverless functions',
+      supportedFrameworks: ['HTML_CSS_JS', 'REACT', 'VUE', 'NEXTJS'],
+      requiresAuth: true,
+      setupUrl: 'https://netlify.com',
+    },
+    {
+      id: 'github-pages',
+      name: 'GitHub Pages',
+      description: 'Free static site hosting from GitHub',
+      supportedFrameworks: ['HTML_CSS_JS', 'REACT', 'VUE'],
+      requiresAuth: true,
+      setupUrl: 'https://pages.github.com',
+    },
+    {
+      id: 'firebase',
+      name: 'Firebase Hosting',
+      description: 'Fast and secure web hosting by Google',
+      supportedFrameworks: ['HTML_CSS_JS', 'REACT', 'VUE', 'NEXTJS'],
+      requiresAuth: true,
+      setupUrl: 'https://firebase.google.com/docs/hosting',
+    },
+    {
+      id: 'surge',
+      name: 'Surge.sh',
+      description: 'Simple, single-command web publishing',
+      supportedFrameworks: ['HTML_CSS_JS', 'REACT', 'VUE'],
+      requiresAuth: false,
+      setupUrl: 'https://surge.sh',
+    },
+  ];
+
+  getAvailableProviders(framework?: string): DeploymentProvider[] {
+    if (!framework) {
+      return this.providers;
+    }
+    return this.providers.filter(provider => 
+      provider.supportedFrameworks.includes(framework)
+    );
+  }
+
+  async deploy(config: DeploymentConfig, files: unknown[]): Promise<DeploymentResult> {
+    const provider = this.providers.find(p => p.id === config.provider);
+    if (!provider) {
+      return {
+        success: false,
+        error: 'Invalid deployment provider'
+      };
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    return {
+      success: true,
+      url: `https://${config.projectName.toLowerCase().replace(/[^a-z0-9]/g, '-')}.${config.provider === 'vercel' ? 'vercel.app' : config.provider === 'netlify' ? 'netlify.app' : 'example.com'}`,
+      deploymentId: `${config.provider}-${Date.now()}`,
+      logs: [
+        'Starting deployment...',
+        'Building project...',
+        'Uploading files...',
+        'Configuring routing...',
+        'Deployment successful!'
+      ]
+    };
+  }
+
+  generateDeploymentInstructions(provider: string, framework: string): string {
+    const instructions: Record<string, Record<string, string>> = {
+      'vercel': {
+        'NEXTJS': 'Deploy to Vercel: Install CLI, extract files, run vercel command',
+        'REACT': 'Deploy to Vercel: Install CLI, set build directory, deploy',
+        'HTML_CSS_JS': 'Deploy to Vercel: Install CLI, deploy static files'
+      },
+      'netlify': {
+        'HTML_CSS_JS': 'Deploy to Netlify: Drag and drop files or use CLI',
+        'REACT': 'Deploy to Netlify: Build project, deploy build folder'
+      }
+    };
+
+    return instructions[provider]?.[framework] || `Deploy to ${provider}: Follow provider documentation`;
+  }
+
+  async createDeploymentPackage(files: unknown[], framework: string): Promise<{
+    files: unknown[];
+    instructions: string;
+    metadata: unknown;
+  }> {
+    const deploymentFiles = [...files];
+    
+    const instructions = `Deployment guide for ${framework} project`;
+
+    return {
+      files: deploymentFiles,
+      instructions,
+      metadata: {
+        framework,
+        supportedProviders: this.getAvailableProviders(framework).map(p => p.name),
+        generatedAt: new Date().toISOString()
+      }
+    };
+  }
+}
+
+export const deploymentService = new DeploymentService();
