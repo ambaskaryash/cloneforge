@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #ffffff;
+    --foreground: #171717;
+  }
+}
+
+body {
+  background: #ffffff;
+  color: #171717;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Force black text globally */
+* {
+  color: #171717 !important;
+}
+
+/* Override specific elements that might have different colors */
+input, textarea, select {
+  color: #171717 !important;
+}
+
+button {
+  color: #171717 !important;
+}
+
+/* Allow white text on dark backgrounds */
+.bg-blue-600, .bg-green-600, .bg-red-600, .bg-gray-800, .bg-black {
+  color: white !important;
+}
+
+.text-white {
+  color: white !important;
+}

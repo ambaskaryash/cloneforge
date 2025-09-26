@@ -1,0 +1,123 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Subscription and usage tracking
+  monthlyClones      Int      @default(0)
+  lastResetDate      DateTime @default(now())
+  
+  // Payment gateway fields
+  stripeCustomerId    String?  // Keep for backward compatibility
+  payuTransactionId   String?  // PayU transaction ID
+  payuPaymentMode     String?  // PayU payment method used
+  subscriptionStatus  String?  @default("inactive")
+  subscriptionPlan    String?  @default("FREE")
+
+  // Relations
+  projects Project[]
+  usageHistory UsageHistory[]
+
+  @@map("users")
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  originalUrl String
+  status      ProjectStatus @default(PENDING)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Analysis results
+  detectedTechnology String?
+  extractedHtml      String?
+  extractedCss       String?
+  extractedJs        String?
+  screenshots        String[] // URLs to screenshot images
+
+  // User relation
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Generated code versions
+  generatedVersions GeneratedVersion[]
+
+  @@map("projects")
+}
+
+model GeneratedVersion {
+  id          String     @id @default(cuid())
+  framework   Framework
+  status      CodeStatus @default(PENDING)
+  generatedAt DateTime   @default(now())
+  
+  // Generated files
+  files       Json // Store as JSON: { path: string, content: string }[]
+  
+  // Metadata
+  buildSize   Int? // Size in bytes
+  buildTime   Int? // Time in milliseconds
+  
+  // Project relation
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("generated_versions")
+}
+
+model UsageHistory {
+  id        String   @id @default(cuid())
+  action    String   // e.g., "clone_website", "generate_code", "download_project"
+  timestamp DateTime @default(now())
+  metadata  Json?    // Additional data about the action
+  
+  // User relation
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("usage_history")
+}
+
+
+enum ProjectStatus {
+  PENDING
+  ANALYZING
+  ANALYZED
+  GENERATING
+  COMPLETED
+  FAILED
+}
+
+enum Framework {
+  HTML_CSS_JS
+  NEXTJS
+  WORDPRESS
+  LARAVEL
+  PHP
+  REACT
+  VUE
+}
+
+enum CodeStatus {
+  PENDING
+  GENERATING
+  COMPLETED
+  FAILED
+}
